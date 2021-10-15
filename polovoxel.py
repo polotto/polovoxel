@@ -1,15 +1,59 @@
 bl_info = {
-    "name": "My Test Add-on",
+    "name": "Polovoxel Add-on",
     "blender": (2, 80, 0),
     "category": "Object",
 }
 
 import bpy
 
-cube = bpy.ops.mesh.primitive_cube_add(size=2, enter_editmode=False, align='WORLD', location=(0, 1, 0), scale=(1, 1, 1))
 
-print(cube)
-#bpy.data.materials["Material.001"].node_tree.nodes["Principled BSDF"].inputs[0].default_value = (0.8, 0.0133748, 0.135298, 1)
+import bmesh
+
+context = bpy.context
+ob = context.edit_object
+
+me = ob.data
+
+bm = bmesh.from_edit_mesh(me)
+# list of selected faces
+selfaces = [f for f in bm.faces if f.select]
+cube_location = selfaces[0].calc_center_median()
+
+
+if selfaces:
+    print("%d faces selected" % len(selfaces))
+else:
+    print("No Faces Selected")
+
+bpy.ops.mesh.primitive_cube_add(size=2, enter_editmode=False, align='WORLD', location=cube_location, scale=(1, 1, 1))
+
+
+'''
+cube_scale = (1, 1, 1)
+cube_color = (0, 0, 1, 1)
+cube_location = (0, 1, 0)
+
+bpy.ops.mesh.primitive_cube_add(size=2, enter_editmode=False, align='WORLD', location=cube_location, scale=cube_scale)
+cube_obj = bpy.context.object
+
+mat_name = cube_obj.name
+
+# Get material
+mat = bpy.data.materials.get(mat_name)
+if mat is None:
+    # create material
+    mat = bpy.data.materials.new(name=mat_name)
+
+mat.diffuse_color = cube_color
+
+# Assign it to object
+if cube_obj.data.materials:
+    # assign to 1st material slot
+    cube_obj.data.materials[0] = mat
+else:
+    # no slots
+    cube_obj.data.materials.append(mat)
+'''    
 
 '''
 
