@@ -21,6 +21,16 @@ bl_info = {
 # ------------------------------------------------------------------------
 
 
+def get_material_name(color):
+    return 'R:{0:.2f},G:{1:.2f},B:{2:.2f},A:{3:.2f}'.format(color[0], color[1], color[2], color[3])
+
+
+def get_props_from_context(context):
+    return (
+        context.scene.polovoxel_properties.polovoxel_scale,
+        context.scene.polovoxel_properties.polovoxel_color
+    )
+
 def setup_obj_material(cube_obj, name, color):
     # Get material
     mat = bpy.data.materials.get(name)
@@ -36,6 +46,11 @@ def setup_obj_material(cube_obj, name, color):
     else:
         # no slots
         cube_obj.data.materials.append(mat)
+        
+    try:
+        bpy.context.space_data.shading.type = 'MATERIAL'
+    except:
+        pass
 
 
 def create_cube(context, cube_location, cube_scale, mat_name, cube_color):
@@ -63,9 +78,12 @@ def create_cube(context, cube_location, cube_scale, mat_name, cube_color):
 
 
 class PolovoxelAddVoxelOperator(bpy.types.Operator):
-    """Add new voxel over selected face"""
+    """Add new voxel above selected face"""
     bl_idname = "object.polovoxel_add_voxel_operator"
-    bl_label = "Add voxel over selected face"
+    bl_label = "Add voxel above selected face (Ctrl + Alt + I)"
+    
+    def key_map(km):
+        return km.keymap_items.new(PolovoxelAddVoxelOperator.bl_idname, type='I', value='PRESS', ctrl=True, alt=True)
 
     scale: bpy.props.FloatProperty(
         name = 'Scale',
@@ -92,8 +110,7 @@ class PolovoxelAddVoxelOperator(bpy.types.Operator):
     # ------------------------------------------------------------------------
 
     def main(self, context):
-        self.color = context.scene.polovoxel_properties.polovoxel_color
-        self.scale = context.scene.polovoxel_properties.polovoxel_scale
+        self.scale, self.color = get_props_from_context(context)
         
         selected_center_location, selected_normal = self.get_first_selected_face_center_location(context)
 
@@ -103,7 +120,7 @@ class PolovoxelAddVoxelOperator(bpy.types.Operator):
             cube_location = selected_center_location + \
                 (selected_normal * Vector(cube_scale))
 
-            mat_name = 'R:{0:.2f},G:{1:.2f},B:{2:.2f},A:{3:.2f}'.format(self.color[0], self.color[1], self.color[2], self.color[3])
+            mat_name = get_material_name(self.color)
             cube_color = self.color
 
             create_cube(context, cube_location, cube_scale, mat_name, cube_color)
@@ -130,7 +147,10 @@ class PolovoxelAddVoxelOperator(bpy.types.Operator):
 class PolovoxelAddFirstVoxelOperator(bpy.types.Operator):
     """Add one voxel over world origin"""
     bl_idname = "object.polovoxel_add_first_voxel_operator"
-    bl_label = "Add first voxel"
+    bl_label = "Add first voxel (Ctrl + Alt + N)"
+    
+    def key_map(km):
+        return km.keymap_items.new(PolovoxelAddFirstVoxelOperator.bl_idname, type='N', value='PRESS', ctrl=True, alt=True)
 
     scale: bpy.props.FloatProperty(
         name = 'Scale',
@@ -149,8 +169,7 @@ class PolovoxelAddFirstVoxelOperator(bpy.types.Operator):
     )
 
     def execute(self, context):
-        self.color = context.scene.polovoxel_properties.polovoxel_color
-        self.scale = context.scene.polovoxel_properties.polovoxel_scale
+        self.scale, self.color = get_props_from_context(context)
         
         self.main(bpy.context)
         return {'FINISHED'}
@@ -160,7 +179,48 @@ class PolovoxelAddFirstVoxelOperator(bpy.types.Operator):
         
         cube_location = (0,0,0)
         
-        mat_name = 'R:{0:.2f},G:{1:.2f},B:{2:.2f},A:{3:.2f}'.format(self.color[0], self.color[1], self.color[2], self.color[3])
+        mat_name = get_material_name(self.color)
+        cube_color = self.color
+
+        create_cube(context, cube_location, cube_scale, mat_name, cube_color)
+
+
+class PolovoxelAddPlaneVoxelOperator(bpy.types.Operator):
+    """Create a voxel plane"""
+    bl_idname = "object.polovoxel_add_plane_voxel_operator"
+    bl_label = "Create voxel plane (Ctrl + Alt + P)"
+    
+    def key_map(km):
+        return km.keymap_items.new(PolovoxelAddFirstVoxelOperator.bl_idname, type='P', value='PRESS', ctrl=True, alt=True)
+
+    scale: bpy.props.FloatProperty(
+        name = 'Scale',
+        default = 1.0,
+        min = 0.0,
+        precision=1
+    )
+    
+    color: bpy.props.FloatVectorProperty(
+        name = "Color",
+        subtype = "COLOR",
+        size = 4,
+        min = 0.0,
+        max = 1.0,
+        default = (0.01, 0.85, 0.22, 1.0)
+    )
+
+    def execute(self, context):
+        self.scale, self.color = get_props_from_context(context)
+        
+        self.main(bpy.context)
+        return {'FINISHED'}
+    
+    def main(self, context):
+        cube_scale = (self.scale, self.scale, self.scale)            
+        
+        cube_location = (0,0,0)
+        
+        mat_name = get_material_name(self.color)
         cube_color = self.color
 
         create_cube(context, cube_location, cube_scale, mat_name, cube_color)
@@ -191,7 +251,8 @@ class PolovoxelPanelProperties(bpy.types.PropertyGroup):
         name = 'Scale',
         default = 1.0,
         min=0.0,
-        precision=1
+        precision=2,
+        step=1
     )
     
     polovoxel_color: bpy.props.FloatVectorProperty(
@@ -223,7 +284,17 @@ class PolovoxelPanel(bpy.types.Panel):
         
         # row
         row = layout.row()
-        row.label(text="General options")
+        row.label(text="How use:")
+        row = layout.row()
+        row.label(text=" * choose a scale")
+        row = layout.row()
+        row.label(text=" * choose a color")
+        row = layout.row()
+        row.label(text=" * click: Add first voxel")
+        row = layout.row()
+        row.label(text=" * choose desired face to draw")
+        row = layout.row()
+        row.label(text=" * click: Add voxel above selected face")
         
         # row
         row = layout.row()
@@ -241,6 +312,12 @@ class PolovoxelPanel(bpy.types.Panel):
         
         # row
         row = layout.row()
+        props = row.operator(PolovoxelAddPlaneVoxelOperator.bl_idname)
+        props.scale = world.polovoxel_scale
+        props.color = world.polovoxel_color
+        
+        # row
+        row = layout.row()
         props = row.operator(PolovoxelAddVoxelOperator.bl_idname)
         props.scale = world.polovoxel_scale
         props.color = world.polovoxel_color
@@ -253,6 +330,7 @@ addon_keymaps = []
 classes = (
     PolovoxelPanelProperties,
     PolovoxelAddFirstVoxelOperator,
+    PolovoxelAddPlaneVoxelOperator,
     PolovoxelAddVoxelOperator,
     PolovoxelPanel
 )
@@ -271,12 +349,8 @@ def register():
     if kc:
         km = wm.keyconfigs.addon.keymaps.new(name='3D View', space_type='VIEW_3D')
         
-        kmi = km.keymap_items.new(PolovoxelAddVoxelOperator.bl_idname, type='I', value='PRESS', ctrl=True, alt=True)
-        addon_keymaps.append((km, kmi))
-        
-        kmi = km.keymap_items.new(PolovoxelAddFirstVoxelOperator.bl_idname, type='N', value='PRESS', ctrl=True, alt=True)
-        #print(dir(kmi.properties))
-        addon_keymaps.append((km, kmi))
+        addon_keymaps.append((km, PolovoxelAddVoxelOperator.key_map(km)))
+        addon_keymaps.append((km, PolovoxelAddFirstVoxelOperator.key_map(km)))
 
 
 def unregister():
