@@ -291,7 +291,7 @@ class PolovoxelAddOnClickVoxelOperator(bpy.types.Operator):
     bl_label = "Add voxel over clicked face"
     
     def key_map(km):
-        return km.keymap_items.new(PolovoxelAddFirstVoxelOperator.bl_idname, type='N', value='PRESS', ctrl=True, alt=True)
+        return km.keymap_items.new(PolovoxelAddFirstVoxelOperator.bl_idname, type='R', value='PRESS', ctrl=True, alt=True)
 
     scale: bpy.props.FloatProperty(
         name = 'Scale',
