@@ -1,11 +1,17 @@
-# polovoxel
+# Polovoxel
 
-Simple voxel add-on for blender
+simple voxel add-on for blender
+
+## Functions
+
+- generate one cube/voxel on 0,0,0;
+- add new voxel over selected face;
+- customize voxel color and scale;
 
 ## Instalation
 
-- download the file polovoxel.py
-- open blender
+- download the file polovoxel.py;
+- open blender;
 - go to:
 
 ## How to use
@@ -17,7 +23,7 @@ Simple voxel add-on for blender
 - choose desired face to draw;
 - click: Add voxel above selected face;
 
-## resources
+## Resources
 
 ### tutorial
 
