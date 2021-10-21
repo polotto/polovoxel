@@ -1,6 +1,7 @@
 from mathutils import *
 import bmesh
 import bpy
+import math
 
 bl_info = {
     "name": "Polovoxel",
@@ -30,6 +31,18 @@ def get_props_from_context(context):
         context.scene.polovoxel_properties.polovoxel_scale,
         context.scene.polovoxel_properties.polovoxel_color
     )
+
+
+def get_3d_shapes_props_from_context(context):    
+    return (
+        context.scene.polovoxel_properties.polovoxel_x_location,
+        context.scene.polovoxel_properties.polovoxel_y_location,
+        context.scene.polovoxel_properties.polovoxel_z_location,
+        context.scene.polovoxel_properties.polovoxel_width,
+        context.scene.polovoxel_properties.polovoxel_height,
+        context.scene.polovoxel_properties.polovoxel_depth
+    )
+
 
 def setup_obj_material(cube_obj, name, color):
     # Get material
@@ -185,13 +198,100 @@ class PolovoxelAddFirstVoxelOperator(bpy.types.Operator):
         create_cube(context, cube_location, cube_scale, mat_name, cube_color)
 
 
-class PolovoxelAddPlaneVoxelOperator(bpy.types.Operator):
-    """Create a voxel plane"""
+class PolovoxelAddCuboidVoxelOperator(bpy.types.Operator):
+    """Create a voxel cuboid"""
     bl_idname = "object.polovoxel_add_plane_voxel_operator"
-    bl_label = "Create voxel plane (Ctrl + Alt + P)"
+    bl_label = "Create voxel cuboid (Ctrl + Alt + C)"
     
     def key_map(km):
-        return km.keymap_items.new(PolovoxelAddFirstVoxelOperator.bl_idname, type='P', value='PRESS', ctrl=True, alt=True)
+        return km.keymap_items.new(PolovoxelAddFirstVoxelOperator.bl_idname, type='C', value='PRESS', ctrl=True, alt=True)
+    
+    x_location: bpy.props.IntProperty(
+        name = 'X Location',
+        default = 1,
+        min = 0,
+    )
+    
+    y_location: bpy.props.IntProperty(
+        name = 'Y Location',
+        default = 1,
+        min = 0,
+    )
+    
+    z_location: bpy.props.IntProperty(
+        name = 'Z Location',
+        default = 1,
+        min = 0,
+    )
+    
+    width: bpy.props.IntProperty(
+        name = 'Width',
+        default = 2,
+        min = 1
+    )
+    
+    height: bpy.props.IntProperty(
+        name = 'Height',
+        default = 2,
+        min = 1
+    )
+    
+    depth: bpy.props.IntProperty(
+        name = 'Depth',
+        default = 2,
+        min = 1
+    )
+    
+    scale: bpy.props.FloatProperty(
+        name = 'Scale',
+        default = 1.0,
+        min = 0.0,
+        precision=1
+    )
+    
+    color: bpy.props.FloatVectorProperty(
+        name = "Color",
+        subtype = "COLOR",
+        size = 4,
+        min = 0.0,
+        max = 1.0,
+        default = (0.01, 0.85, 0.22, 1.0)
+    )
+
+    def execute(self, context):
+        self.x_location, self.y_location, self.z_location, self.width, self.height, self.depth = get_3d_shapes_props_from_context(context)
+        self.scale, self.color = get_props_from_context(context)
+        
+        self.main(bpy.context)
+        return {'FINISHED'}
+    
+    def main(self, context):
+        cube_scale = (self.scale, self.scale, self.scale)
+        voxel_size = 2 * int(math.ceil(self.scale))
+        location_x_range = range(self.x_location, self.x_location + (self.width * voxel_size), voxel_size)
+        location_y_range = range(self.y_location, self.y_location + (self.depth * voxel_size), voxel_size)
+        location_z_range = range(self.z_location, self.z_location + (self.height * voxel_size), voxel_size)
+        
+        print(location_x_range)
+        
+        for x in location_x_range:
+            for y in location_y_range:
+                for z in location_z_range:
+                    cube_location = (x, y, z)
+                    
+                    mat_name = get_material_name(self.color)
+                    cube_color = self.color
+
+                    create_cube(context, cube_location, cube_scale, mat_name, cube_color)
+
+
+class PolovoxelAddOnClickVoxelOperator(bpy.types.Operator):
+    """Add one voxel over click"""
+    bl_idname = "object.polovoxel_add_on_click_voxel_operator"
+    bl_label = "Add voxel over clicked face"
+    
+    def key_map(km):
+        return km.keymap_items.new(PolovoxelAddFirstVoxelOperator.bl_idname, type='N', value='PRESS', ctrl=True, alt=True)
 
     scale: bpy.props.FloatProperty(
         name = 'Scale',
@@ -263,6 +363,42 @@ class PolovoxelPanelProperties(bpy.types.PropertyGroup):
         max = 1.0,
         default = (0.01, 0.85, 0.22, 1.0)
     )
+    
+    polovoxel_x_location: bpy.props.IntProperty(
+        name = 'X Location',
+        default = 1,
+        min = 0,
+    )
+    
+    polovoxel_y_location: bpy.props.IntProperty(
+        name = 'Y Location',
+        default = 1,
+        min = 0,
+    )
+    
+    polovoxel_z_location: bpy.props.IntProperty(
+        name = 'Z Location',
+        default = 1,
+        min = 0,
+    )
+    
+    polovoxel_width: bpy.props.IntProperty(
+        name = 'Width',
+        default = 2,
+        min = 1
+    )
+    
+    polovoxel_height: bpy.props.IntProperty(
+        name = 'Height',
+        default = 2,
+        min = 1
+    )
+    
+    polovoxel_depth: bpy.props.IntProperty(
+        name = 'Depth',
+        default = 2,
+        min = 1
+    )
 
 
 # ------------------------------------------------------------------------
@@ -298,11 +434,19 @@ class PolovoxelPanel(bpy.types.Panel):
         
         # row
         row = layout.row()
+        row.label(text="Common options:")
+        
+        # row
+        row = layout.row()
         row.prop(world, "polovoxel_scale")
         
         # row
         row = layout.row()
         row.prop(world, "polovoxel_color")
+        
+        # row
+        row = layout.row()
+        row.label(text="Voxel:")
         
         # row
         row = layout.row()
@@ -312,9 +456,47 @@ class PolovoxelPanel(bpy.types.Panel):
         
         # row
         row = layout.row()
-        props = row.operator(PolovoxelAddPlaneVoxelOperator.bl_idname)
+        row.label(text="3D shapes:")
+        
+        # row
+        row = layout.row()
+        row.prop(world, "polovoxel_x_location")
+        
+        # row
+        row = layout.row()
+        row.prop(world, "polovoxel_y_location")
+        
+        # row
+        row = layout.row()
+        row.prop(world, "polovoxel_z_location")
+        
+        # row
+        row = layout.row()
+        row.prop(world, "polovoxel_width")
+        
+        # row
+        row = layout.row()
+        row.prop(world, "polovoxel_height")
+        
+        # row
+        row = layout.row()
+        row.prop(world, "polovoxel_depth")
+        
+        # row
+        row = layout.row()
+        props = row.operator(PolovoxelAddCuboidVoxelOperator.bl_idname)
         props.scale = world.polovoxel_scale
         props.color = world.polovoxel_color
+        props.x_location = world.polovoxel_x_location
+        props.y_location = world.polovoxel_y_location
+        props.z_location = world.polovoxel_z_location
+        props.width = world.polovoxel_width
+        props.width = world.polovoxel_height
+        props.depth = world.polovoxel_depth
+        
+        # row
+        row = layout.row()
+        row.label(text="Edit mode:")
         
         # row
         row = layout.row()
@@ -330,8 +512,9 @@ addon_keymaps = []
 classes = (
     PolovoxelPanelProperties,
     PolovoxelAddFirstVoxelOperator,
-    PolovoxelAddPlaneVoxelOperator,
+    PolovoxelAddCuboidVoxelOperator,
     PolovoxelAddVoxelOperator,
+    PolovoxelAddOnClickVoxelOperator,
     PolovoxelPanel
 )
 
