@@ -6,13 +6,16 @@ simple voxel add-on for blender
 
 - generate one cube/voxel on 0,0,0;
 - add new voxel over selected face;
+- add new voxel over selected face on click;
 - customize voxel color and scale;
+- generate cuboid;
 
 ## Instalation
 
-- download the file polovoxel.py;
-- open blender;
-- go to:
+- download the file `polovoxel.py`;
+- open blender and go to: `Edit / Preferences / Add-ons`;
+- click `Install` and select `polovoxel.py` file;
+- click `Install Add-on`;
 
 ## How to use
 
@@ -96,3 +99,20 @@ simple voxel add-on for blender
 
 - https://docs.blender.org/api/current/bpy.types.PropertyGroup.html
 - https://devtalk.blender.org/t/creating-and-accessing-propertygroup-instances/14332
+
+### get blender mode
+
+- https://blender.stackexchange.com/questions/21408/know-when-edit-mode-is-entered-by-script-python
+
+### unselect edit mode
+
+- https://blenderartists.org/t/problem-with-bpy-ops-mesh-select-all-in-edit-mode/560398
+- https://blender.stackexchange.com/questions/52479/why-deselecting-an-already-selected-vertex-does-not-work
+
+### add-on breaks blender
+
+- https://blender.stackexchange.com/questions/204633/undo-breaks-my-addon
+
+### pass trought when click
+
+- https://blenderartists.org/t/trigger-action-through-mouseclick/674367/7
