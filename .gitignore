@@ -130,3 +130,6 @@ dmypy.json
 
 # blender ignore
 *.blend1
+
+# jet brains
+.idea
