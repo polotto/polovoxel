@@ -10,12 +10,26 @@ simple voxel add-on for blender
 - customize voxel color and scale;
 - generate cuboid;
 
-## Instalation
+## Installation
 
-- download the file `polovoxel.py`;
-- open blender and go to: `Edit / Preferences / Add-ons`;
-- click `Install` and select `polovoxel.py` file;
+The add-on source lives in the `polovoxel/` package; build an installable
+zip with the packaging script, then install that zip in Blender:
+
+```sh
+python3 scripts/publish.py
+```
+
+This writes `dist/polovoxel_<version>.zip` (see `docs/CLI.md` for flags like
+`--version-bump` and `--output-dir`). Then in Blender:
+
+- open `Edit / Preferences / Add-ons`;
+- click `Install` and select the zip from `dist/`;
 - click `Install Add-on`;
+- enable the "Polovoxel" checkbox.
+
+Iterating on the source instead of reinstalling a zip every time? See
+[`docs/TESTING.md`](docs/TESTING.md) for a symlink-based workflow that picks
+up edits without repackaging.
 
 ## How to use
 
@@ -23,8 +37,19 @@ simple voxel add-on for blender
 - choose a scale;
 - choose a color;
 - click: Add first voxel;
-- choose desired face to draw;
+- select the voxel object, press `Tab` to enter Edit Mode, press `3` (or
+  click the face-select icon in the header) to switch to Face select mode,
+  then click a face to select it — that's the face the next voxel will be
+  added onto;
 - click: Add voxel above selected face;
+
+## Documentation
+
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — package layout and layering rationale
+- [`docs/BUGS.md`](docs/BUGS.md) — bug & code-smell audit of the original single-file add-on
+- [`docs/TESTING.md`](docs/TESTING.md) — local install/reload/debug workflow
+- [`docs/CLI.md`](docs/CLI.md) — `scripts/publish.py` packaging script reference
+- [`docs/architecture/README.md`](docs/architecture/README.md) — PlantUML component & sequence diagrams
 
 ## Resources
 
@@ -116,3 +141,4 @@ simple voxel add-on for blender
 ### pass trought when click
 
 - https://blenderartists.org/t/trigger-action-through-mouseclick/674367/7
+</content>

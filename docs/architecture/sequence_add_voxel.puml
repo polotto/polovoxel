@@ -1,0 +1,28 @@
+@startuml sequence_add_voxel
+title "Add voxel above selected face" — happy path
+
+actor User
+participant "Panel\n(ui/panel.py)" as Panel
+participant "PolovoxelAddVoxelOperator\n(operators/add_voxel_on_face.py)" as Operator
+participant "blender_mesh\n(infrastructure/)" as Infra
+participant "geometry\n(domain/)" as Domain
+
+User -> Panel : click "Add voxel above selected face"
+Panel -> Operator : execute(context)
+
+Operator -> Infra : add_voxel_on_selected_face(context, scale, color)
+Infra -> Infra : get_first_selected_face_center_location(context)
+note right : reads selected face\nvia bmesh
+
+Infra -> Domain : compute_face_voxel_location(center, normal, scale)
+Domain --> Infra : new cube location
+
+Infra -> Domain : get_material_name(color)
+Domain --> Infra : material name
+
+Infra -> Infra : create_cube(...)
+note right : bpy.ops.mesh.primitive_cube_add\n+ assign/create material
+
+Infra --> Operator : done
+Operator --> Panel : {'FINISHED'}
+@enduml
