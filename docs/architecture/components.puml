@@ -39,12 +39,18 @@ Root ..> Operators : registers
 Root ..> UI : registers
 Root ..> Keymaps : registers
 
-UI --> Operators : invokes (bl_idname)
+UI --> Operators : invokes (bl_idname)\nor calls directly (click-to-add toggle)
 Keymaps --> Operators : binds shortcut to
 
 Operators --> Infra : calls
 Operators --> Domain : calls
 
 Infra --> Domain : calls
+
+note bottom of Infra
+  Also raycasts the 3D viewport
+  (bpy_extras.view3d_utils + Scene.ray_cast)
+  for click-to-add — not just bmesh.
+end note
 
 @enduml

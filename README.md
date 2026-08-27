@@ -6,7 +6,7 @@ simple voxel add-on for blender
 
 - generate one cube/voxel on 0,0,0;
 - add new voxel over selected face;
-- add new voxel over selected face on click;
+- click any face to add a new voxel above it directly (no selection needed);
 - customize voxel color and scale;
 - generate cuboid;
 

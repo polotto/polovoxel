@@ -36,6 +36,27 @@ Legend: `[ ]` pending · `[x]` done
 - [x] 3.3 Final consistency check (all referenced files exist, `.py` files
       byte-compile, plan fully checked off)
 
+## Phase 4 — Live-testing bug fixes (post-release)
+
+Found and fixed through hands-on testing in real Blender after Phase 3
+shipped — the original audit (0.1) couldn't catch these because the
+features involved had never actually been exercised end-to-end before.
+Each is documented in full in `docs/BUGS.md` #17–19.
+
+- [x] 4.1 Material color never reached Material Preview/Rendered shading
+      (`docs/BUGS.md` #17)
+- [x] 4.2 No operator declared `bl_options = {'REGISTER', 'UNDO'}`,
+      risking a native Blender crash on undo (`docs/BUGS.md` #18)
+- [x] 4.3 "Enable add with click" never actually worked — redesigned from
+      edit-mesh-selection-based to mouse raycast-based, fixing four
+      compounding issues along the way (never invoked, restricted-context
+      modal start, `context.area` unavailable for timer-started modals,
+      off-face-center drift) (`docs/BUGS.md` #19)
+
+See [`CLAUDE.md`](CLAUDE.md) for the process used to find and fix these —
+the live-debugging protocol there is what future sessions should follow
+for the next round of bugs, not just this plan file.
+
 ## Notes
 
 - Executed via background sub-agents (Workflow tool) to keep the main chat

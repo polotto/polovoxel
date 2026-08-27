@@ -75,12 +75,35 @@ live in Blender after a reload (§2) — no re-zip, no re-copy.
 
 ## 2. Reload after code changes
 
-- **Fastest**: hover the 3D viewport and press **F3**, type "Reload
-  Scripts", press Enter. (Or Blender's top menu: **Topbar > File >
-  Reload Scripts** isn't standard — F3 search is the reliable path across
-  versions.)
-- **Alternative**: **Edit > Preferences > Add-ons** → toggle the Polovoxel
-  checkbox off, then on again. This re-runs `unregister()`/`register()`.
+- **Recommended — force reload (reliable for this multi-file package)**:
+  F3 "Reload Scripts", and even toggling the add-on off/on, both only
+  re-run `unregister()`/`register()` — neither forces Python to re-import
+  submodules it has already cached in `sys.modules`. For a single-file
+  add-on that's fine; for a package split across `polovoxel/operators/`,
+  `polovoxel/infrastructure/`, etc., it means edits to a submodule can
+  silently **not** take effect, because `polovoxel/__init__.py`'s
+  `from .operators.add_voxel_on_click import ...` just re-fetches the
+  stale cached module instead of re-reading the file. Paste this into the
+  **Python Console** (Scripting workspace tab) instead — it purges every
+  `polovoxel*` entry from `sys.modules` before re-enabling, guaranteeing a
+  fresh re-import of every file:
+  ```python
+  import sys, bpy
+  bpy.ops.preferences.addon_disable(module="polovoxel")
+  for name in list(sys.modules):
+      if name == "polovoxel" or name.startswith("polovoxel."):
+          del sys.modules[name]
+  bpy.ops.preferences.addon_enable(module="polovoxel")
+  print("Polovoxel: force-reloaded")
+  ```
+  No Blender restart needed — this is safe to run repeatedly while
+  iterating.
+- **Fastest, but only reliably picks up changes to `polovoxel/__init__.py`
+  itself**: hover the 3D viewport and press **F3**, type "Reload Scripts",
+  press Enter.
+- **Equivalent to F3 for staleness purposes**: **Edit > Preferences >
+  Add-ons** → toggle the Polovoxel checkbox off, then on again. This
+  re-runs `unregister()`/`register()` but not the module re-import either.
 - **Caveat — modal state**: `PolovoxelAddOnClickVoxelOperator` is a running
   modal operator once invoked (click-to-add mode). Reload Scripts does not
   cleanly tear down an in-flight modal operator. If click-to-add starts
@@ -160,10 +183,15 @@ bypass that.
 7. In the panel's **3D shapes** section, set X/Y/Z Location and
    Width/Height/Depth, click **Create voxel cuboid** (or **Ctrl+Alt+C**) →
    a solid block of voxels is generated matching all three dimensions.
-8. Toggle **Enable add with click** on. Stay in Edit Mode with a face
-   selected, left-click a face in the viewport → a voxel is added on click,
-   no panel/shortcut needed. Toggle it back off and confirm clicking no
-   longer adds voxels. Right-click or Esc should not crash the click-modal.
+8. Toggle **Enable add with click** on (toggling it, not just seeing it
+   already checked, is what actually starts the click-listener — see
+   `docs/BUGS.md` #19). Left-click any face of any existing cube in the 3D
+   viewport — a new voxel is added directly above that face immediately, no
+   pre-selection needed, and it works in either Object or Edit Mode (a ray
+   is cast from the cursor into the scene, see `docs/BUGS.md` #19's design
+   change note). Clicking empty space (nothing under the cursor) does
+   nothing, silently. Toggle it back off and confirm clicking no longer
+   adds voxels. Right-click or Esc should not crash the click-modal.
 
 ---
 

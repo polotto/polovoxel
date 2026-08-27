@@ -9,6 +9,7 @@ class PolovoxelAddFirstVoxelOperator(bpy.types.Operator):
     """Add one voxel over world origin"""
     bl_idname = "object.polovoxel_add_first_voxel_operator"
     bl_label = "Add first voxel (Ctrl + Alt + N)"
+    bl_options = {'REGISTER', 'UNDO'}
 
     scale: bpy.props.FloatProperty(
         name='Scale',

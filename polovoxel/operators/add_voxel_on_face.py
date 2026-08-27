@@ -8,6 +8,7 @@ class PolovoxelAddVoxelOperator(bpy.types.Operator):
     """Add new voxel above selected face"""
     bl_idname = "object.polovoxel_add_voxel_operator"
     bl_label = "Add voxel above selected face (Ctrl + Alt + I)"
+    bl_options = {'REGISTER', 'UNDO'}
 
     scale: bpy.props.FloatProperty(
         name='Scale',

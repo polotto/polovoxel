@@ -52,17 +52,28 @@ point inward, never outward.**
   something impossible for the rest of the add-on.
 - **`infrastructure/`** depends on `domain/` (for coordinates and material
   names) but never the reverse. It is where every `bpy.ops`, `bpy.data`,
-  and `bmesh` call lives: creating the actual cube object, assigning
-  materials, reading the selected face out of the edit-mesh `bmesh`.
+  `bmesh`, and viewport/window-introspection call lives: creating the
+  actual cube object, assigning materials, reading the selected face out of
+  the edit-mesh `bmesh` — and, for click-to-add, resolving which 3D
+  viewport region is under the mouse and raycasting (`Scene.ray_cast` via
+  `bpy_extras.view3d_utils`) to find the clicked face directly, with no
+  edit-mesh selection involved.
 - **`operators/`** depend on `domain/` and `infrastructure/` to implement
   one user-facing action each (`Add first voxel`, `Add voxel on face`, `Add
   voxel on click`, `Add cuboid`). An operator's `execute`/`modal`/`invoke`
   reads properties, asks `domain/` to compute a location, and asks
   `infrastructure/` to realize it in the scene. Operators never talk to
   each other directly.
-- **`ui/`** (`properties.py`, `panel.py`) depends on `operators/` bl_idnames
-  and on `domain/` only incidentally (e.g. default color). The panel just
-  draws widgets and invokes operators by name — it holds no business logic.
+- **`ui/`** (`properties.py`, `panel.py`) depends on `operators/` and on
+  `domain/` only incidentally (e.g. default color). Mostly this is
+  `panel.py` invoking operators by `bl_idname` — declarative, no business
+  logic. One property is the exception: `polovoxel_enable_with_click`'s
+  `update` callback in `properties.py` directly imports and calls
+  `operators.add_voxel_on_click.start_if_not_running()`, because a
+  checkbox toggling scene state can't, by itself, start the modal operator
+  that listens for clicks — something has to. Still a `ui/` → `operators/`
+  dependency (the same direction as everything else), just a Python-level
+  call instead of a `bl_idname` lookup.
 - **`keymaps.py`** depends on the operator bl_idnames it wires shortcuts to.
   It is pulled out on its own because keymap registration/unregistration is
   a distinct lifecycle concern (and the current code has bugs here — see
@@ -109,6 +120,14 @@ current `polovoxel.py`:
 operator's real `bl_idname`, so there is one obvious, testable place these
 bugs live and get fixed instead of three near-duplicate `key_map` methods
 scattered across operator classes.
+
+This layout also made several *further* bugs easy to isolate and fix once
+this structure was in place and actually exercised live in Blender —
+missing `bl_options = {'REGISTER', 'UNDO'}`, a material color never
+reaching the node graph, and the click-to-add feature never having worked
+at all. See `docs/BUGS.md` findings #17–19 for the full detail; the
+raycast-based click-to-add redesign described in the dependency rule above
+(`infrastructure/`, `ui/` bullets) is a direct result of #19.
 
 ## Why this counts as "clean architecture" at this scale
 

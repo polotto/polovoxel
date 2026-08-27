@@ -9,6 +9,7 @@ class PolovoxelAddCuboidVoxelOperator(bpy.types.Operator):
     """Create a voxel cuboid"""
     bl_idname = "object.polovoxel_add_plane_voxel_operator"
     bl_label = "Create voxel cuboid (Ctrl + Alt + C)"
+    bl_options = {'REGISTER', 'UNDO'}
 
     x_location: bpy.props.IntProperty(
         name='X Location',

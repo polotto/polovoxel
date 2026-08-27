@@ -7,6 +7,19 @@ lives here.
 import bpy
 
 
+def _on_enable_with_click_toggled(self, context):
+    """Start the click-to-add modal loop when the checkbox is switched on.
+
+    The property alone doesn't drive any behavior — it's just scene state
+    that :class:`~polovoxel.operators.add_voxel_on_click.PolovoxelAddOnClickVoxelOperator`
+    reads while running. Imported lazily to avoid a module-load-order cycle
+    with the operators package.
+    """
+    if self.polovoxel_enable_with_click:
+        from ..operators.add_voxel_on_click import start_if_not_running
+        start_if_not_running()
+
+
 class PolovoxelPanelProperties(bpy.types.PropertyGroup):
     """Add-on settings stored on ``bpy.types.Scene.polovoxel_properties``."""
 
@@ -71,5 +84,6 @@ class PolovoxelPanelProperties(bpy.types.PropertyGroup):
 
     polovoxel_enable_with_click: bpy.props.BoolProperty(
         name='Enable add with click',
-        default=False
+        default=False,
+        update=_on_enable_with_click_toggled,
     )
