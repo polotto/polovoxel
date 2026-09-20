@@ -1,8 +1,7 @@
 """Operator: add a single voxel at the world origin."""
 import bpy
 
-from ..domain.geometry import get_material_name
-from ..infrastructure.blender_mesh import create_cube
+from ..usecases.factory import factory
 
 
 class PolovoxelAddFirstVoxelOperator(bpy.types.Operator):
@@ -36,9 +35,5 @@ class PolovoxelAddFirstVoxelOperator(bpy.types.Operator):
         return {'FINISHED'}
 
     def main(self, context):
-        """Create a single voxel cube centered at the world origin."""
-        cube_scale = (self.scale, self.scale, self.scale)
-        cube_location = (0, 0, 0)
-        mat_name = get_material_name(self.color)
-
-        create_cube(context, cube_location, cube_scale, mat_name, self.color)
+        """Create a single voxel cube centered at the world origin via the use case."""
+        factory.build_add_first_voxel().execute(context, self.scale, self.color)

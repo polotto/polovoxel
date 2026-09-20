@@ -1,7 +1,7 @@
 """Operator: add a new voxel above the currently selected face (edit mode)."""
 import bpy
 
-from ..infrastructure.blender_mesh import add_voxel_on_selected_face
+from ..usecases.factory import factory
 
 
 class PolovoxelAddVoxelOperator(bpy.types.Operator):
@@ -36,4 +36,4 @@ class PolovoxelAddVoxelOperator(bpy.types.Operator):
 
     def main(self, context):
         """Create a voxel offset from the active edit-mesh's selected face, if any."""
-        add_voxel_on_selected_face(context, self.scale, self.color)
+        factory.build_add_voxel_on_face().execute(context, self.scale, self.color)

@@ -4,7 +4,9 @@ title "Click-to-add" — enable, then place a voxel
 actor User
 participant "properties.py\n(ui/)" as Props
 participant "add_voxel_on_click\n(operators/)" as Operator
-participant "blender_mesh\n(infrastructure/)" as Infra
+participant "factory\n(usecases/factory.py)" as Factory
+participant "AddVoxelAtMouseUseCase\n(usecases/)" as UseCase
+participant "BlenderMeshRepository\n(infrastructure/, implements\ndomain.MeshRepository)" as Repo
 participant "geometry\n(domain/)" as Domain
 
 == Enabling ==
@@ -16,18 +18,26 @@ Operator --> User : report "click-to-add is on"
 
 == Each click ==
 User -> Operator : LEFTMOUSE / PRESS (modal())
-Operator -> Infra : add_voxel_at_mouse(context, event, scale, color)
+Operator -> Factory : build_add_voxel_at_mouse()
+note right : factory is the only place that\nimports infrastructure/ directly,\nto construct the concrete repo
+Factory --> Operator : AddVoxelAtMouseUseCase(mesh_repo)
 
-Infra -> Infra : _find_view3d_region_under_mouse(context, event)
+Operator -> UseCase : execute(context, event, scale, color)
+note right : UseCase only knows mesh_repo\nas the abstract MeshRepository port
+
+UseCase -> Repo : get_face_under_mouse(context, event)
+Repo -> Repo : _find_view3d_region_under_mouse(context, event)
 note right : context.area/region are None here\n(started via a timer) — resolved by\nscanning window.screen.areas against\nevent.mouse_x/mouse_y instead
-
-Infra -> Infra : Scene.ray_cast(...)
+Repo -> Repo : Scene.ray_cast(...)
 note right : hit face's polygon.center,\nnot the raw ray-hit point —\nkeeps voxels grid-flush
+Repo --> UseCase : face center, normal
 
-Infra -> Domain : compute_face_voxel_location(center, normal, scale)
-Domain --> Infra : new cube location
+UseCase -> Domain : compute_face_voxel_location(center, normal, scale)
+Domain --> UseCase : new cube location
 
-Infra -> Infra : create_cube(...)
-Infra --> Operator : True (voxel created)
+UseCase -> Repo : create_cube(...)
+Repo --> UseCase : done
+
+UseCase --> Operator : True (voxel created)
 Operator --> User : consumes the click (RUNNING_MODAL)
 @enduml

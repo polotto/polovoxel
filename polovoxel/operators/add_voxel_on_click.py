@@ -1,7 +1,7 @@
 """Operator: modal handler that adds a voxel on whatever face the user clicks."""
 import bpy
 
-from ..infrastructure.blender_mesh import add_voxel_at_mouse
+from ..usecases.factory import factory
 
 _running = False
 
@@ -39,7 +39,7 @@ class PolovoxelAddOnClickVoxelOperator(bpy.types.Operator):
 
         Works in any object/edit mode and needs no prior face selection —
         the ray is cast straight from the mouse cursor into the 3D
-        viewport (see :func:`polovoxel.infrastructure.blender_mesh.get_face_under_mouse`).
+        viewport (see :class:`polovoxel.usecases.add_voxel_on_click.AddVoxelAtMouseUseCase`).
         """
         if event.type != 'LEFTMOUSE':
             if event.type in {'RIGHTMOUSE', 'ESC'}:
@@ -56,7 +56,7 @@ class PolovoxelAddOnClickVoxelOperator(bpy.types.Operator):
             return {'PASS_THROUGH'}
 
         try:
-            created = add_voxel_at_mouse(context, event, self.scale, self.color)
+            created = factory.build_add_voxel_at_mouse().execute(context, event, self.scale, self.color)
         except Exception as exc:
             # Never let a single bad click silently kill the whole listener
             # (an uncaught exception here would remove this modal handler).

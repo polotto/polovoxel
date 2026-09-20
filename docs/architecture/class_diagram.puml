@@ -1,0 +1,100 @@
+@startuml class_diagram
+title Polovoxel — Class Diagram
+
+skinparam classAttributeIconSize 0
+hide empty members
+
+package "domain" {
+  class geometry <<module>> {
+    +get_material_name(color)
+    +compute_face_voxel_location(center, normal, scale)
+    +compute_cuboid_voxel_locations(x, y, z, width, height, depth, scale)
+  }
+
+  abstract class MeshRepository {
+    +{abstract} create_cube(context, location, scale, mat_name, color)
+    +{abstract} get_first_selected_face_center_location(context)
+    +{abstract} get_face_under_mouse(context, event)
+  }
+}
+
+package "infrastructure" {
+  class BlenderMeshRepository {
+    +create_cube(context, location, scale, mat_name, color)
+    +get_first_selected_face_center_location(context)
+    +get_face_under_mouse(context, event)
+    -_setup_obj_material(cube_obj, name, color)
+    -_find_view3d_region_under_mouse(context, event)
+  }
+}
+
+BlenderMeshRepository .up.|> MeshRepository : implements
+
+package "usecases" {
+  class AddFirstVoxelUseCase {
+    -mesh_repo: MeshRepository
+    +execute(context, scale, color)
+  }
+  class AddVoxelOnFaceUseCase {
+    -mesh_repo: MeshRepository
+    +execute(context, scale, color)
+  }
+  class AddVoxelAtMouseUseCase {
+    -mesh_repo: MeshRepository
+    +execute(context, event, scale, color)
+  }
+  class AddCuboidUseCase {
+    -mesh_repo: MeshRepository
+    +execute(context, x, y, z, width, height, depth, scale, color)
+  }
+  class UseCaseFactory {
+    -mesh_repo: BlenderMeshRepository
+    +build_add_first_voxel()
+    +build_add_voxel_on_face()
+    +build_add_voxel_at_mouse()
+    +build_add_cuboid()
+  }
+}
+
+AddFirstVoxelUseCase o-right-> MeshRepository : mesh_repo\n(injected)
+AddVoxelOnFaceUseCase o-right-> MeshRepository : mesh_repo\n(injected)
+AddVoxelAtMouseUseCase o-right-> MeshRepository : mesh_repo\n(injected)
+AddCuboidUseCase o-right-> MeshRepository : mesh_repo\n(injected)
+
+AddFirstVoxelUseCase ..> geometry : uses
+AddVoxelOnFaceUseCase ..> geometry : uses
+AddVoxelAtMouseUseCase ..> geometry : uses
+AddCuboidUseCase ..> geometry : uses
+
+UseCaseFactory o-down-> BlenderMeshRepository : constructs\n(the one exception —\nusecases/ otherwise never\nimports infrastructure/)
+UseCaseFactory ..> AddFirstVoxelUseCase : builds
+UseCaseFactory ..> AddVoxelOnFaceUseCase : builds
+UseCaseFactory ..> AddVoxelAtMouseUseCase : builds
+UseCaseFactory ..> AddCuboidUseCase : builds
+
+package "operators" {
+  class PolovoxelAddFirstVoxelOperator
+  class PolovoxelAddVoxelOperator
+  class PolovoxelAddOnClickVoxelOperator
+  class PolovoxelAddCuboidVoxelOperator
+}
+
+PolovoxelAddFirstVoxelOperator ..> UseCaseFactory : factory
+PolovoxelAddVoxelOperator ..> UseCaseFactory : factory
+PolovoxelAddOnClickVoxelOperator ..> UseCaseFactory : factory
+PolovoxelAddCuboidVoxelOperator ..> UseCaseFactory : factory
+
+note bottom of MeshRepository
+  Pure Python (abc), zero bpy imports.
+  usecases/ depends on this abstraction,
+  never on BlenderMeshRepository directly.
+end note
+
+note bottom of UseCaseFactory
+  Separates construction (wiring the
+  concrete BlenderMeshRepository into a
+  use case) from use (an operator calling
+  .execute(...) on the built instance).
+end note
+
+@enduml

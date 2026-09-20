@@ -1,8 +1,7 @@
 """Operator: stamp a solid cuboid of voxels."""
 import bpy
 
-from ..domain.geometry import compute_cuboid_voxel_locations, get_material_name
-from ..infrastructure.blender_mesh import create_cube
+from ..usecases.factory import factory
 
 
 class PolovoxelAddCuboidVoxelOperator(bpy.types.Operator):
@@ -84,13 +83,7 @@ class PolovoxelAddCuboidVoxelOperator(bpy.types.Operator):
             self.report({'WARNING'}, "Scale must be greater than 0 to build a cuboid")
             return
 
-        cube_scale = (self.scale, self.scale, self.scale)
-        mat_name = get_material_name(self.color)
-
-        locations = compute_cuboid_voxel_locations(
-            self.x_location, self.y_location, self.z_location,
-            self.width, self.height, self.depth, self.scale
+        factory.build_add_cuboid().execute(
+            context, self.x_location, self.y_location, self.z_location,
+            self.width, self.height, self.depth, self.scale, self.color
         )
-
-        for cube_location in locations:
-            create_cube(context, cube_location, cube_scale, mat_name, self.color)

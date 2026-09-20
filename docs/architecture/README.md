@@ -1,68 +1,120 @@
 # Architecture Diagrams
 
-Three minimal PlantUML diagrams for the Polovoxel add-on's clean-architecture layout.
-See [`../ARCHITECTURE.md`](../ARCHITECTURE.md) for the full written rationale.
+Three minimal PlantUML diagrams for the Polovoxel add-on's clean-architecture
+layout: one class diagram plus two sequence diagrams for the two distinct
+"add a voxel" flows. See [`../ARCHITECTURE.md`](../ARCHITECTURE.md) for the
+full written rationale.
 
-## Components
+## Class Diagram
 
-One box per layer/module: `domain/` has no `bpy` dependency, and every other
-layer depends inward on it (never the reverse). `__init__.py` is the only
-place that wires registration together.
+The actual classes, not just packages: `MeshRepository` is an `abc.ABC`
+port defined in `domain/`, `BlenderMeshRepository` (`infrastructure/`) is
+its only implementation, each `usecases/` class depends on the abstract
+`MeshRepository` (injected through its constructor) rather than the
+concrete class, and `UseCaseFactory` is the one place that constructs
+`BlenderMeshRepository` and wires it into a use case — the composition
+point between the abstraction the use cases depend on and the concrete
+adapter that actually implements it. `__init__.py` (not shown) is the only
+place that wires operator/UI registration together.
 
 ```plantuml
-@startuml components
-title Polovoxel — Component Overview
+@startuml class_diagram
+title Polovoxel — Class Diagram
 
-skinparam componentStyle rectangle
-skinparam linetype ortho
+skinparam classAttributeIconSize 0
+hide empty members
 
-package "__init__.py\n(composition root)" as Root {
+package "domain" {
+  class geometry <<module>> {
+    +get_material_name(color)
+    +compute_face_voxel_location(center, normal, scale)
+    +compute_cuboid_voxel_locations(x, y, z, width, height, depth, scale)
+  }
+
+  abstract class MeshRepository {
+    +{abstract} create_cube(context, location, scale, mat_name, color)
+    +{abstract} get_first_selected_face_center_location(context)
+    +{abstract} get_face_under_mouse(context, event)
+  }
 }
 
-package "operators/" as Operators {
-  [add_first_voxel]
-  [add_voxel_on_face]
-  [add_voxel_on_click]
-  [add_cuboid]
+package "infrastructure" {
+  class BlenderMeshRepository {
+    +create_cube(context, location, scale, mat_name, color)
+    +get_first_selected_face_center_location(context)
+    +get_face_under_mouse(context, event)
+    -_setup_obj_material(cube_obj, name, color)
+    -_find_view3d_region_under_mouse(context, event)
+  }
 }
 
-package "ui/" as UI {
-  [panel.py]
-  [properties.py]
+BlenderMeshRepository .up.|> MeshRepository : implements
+
+package "usecases" {
+  class AddFirstVoxelUseCase {
+    -mesh_repo: MeshRepository
+    +execute(context, scale, color)
+  }
+  class AddVoxelOnFaceUseCase {
+    -mesh_repo: MeshRepository
+    +execute(context, scale, color)
+  }
+  class AddVoxelAtMouseUseCase {
+    -mesh_repo: MeshRepository
+    +execute(context, event, scale, color)
+  }
+  class AddCuboidUseCase {
+    -mesh_repo: MeshRepository
+    +execute(context, x, y, z, width, height, depth, scale, color)
+  }
+  class UseCaseFactory {
+    -mesh_repo: BlenderMeshRepository
+    +build_add_first_voxel()
+    +build_add_voxel_on_face()
+    +build_add_voxel_at_mouse()
+    +build_add_cuboid()
+  }
 }
 
-package "keymaps.py" as Keymaps {
+AddFirstVoxelUseCase o-right-> MeshRepository : mesh_repo\n(injected)
+AddVoxelOnFaceUseCase o-right-> MeshRepository : mesh_repo\n(injected)
+AddVoxelAtMouseUseCase o-right-> MeshRepository : mesh_repo\n(injected)
+AddCuboidUseCase o-right-> MeshRepository : mesh_repo\n(injected)
+
+AddFirstVoxelUseCase ..> geometry : uses
+AddVoxelOnFaceUseCase ..> geometry : uses
+AddVoxelAtMouseUseCase ..> geometry : uses
+AddCuboidUseCase ..> geometry : uses
+
+UseCaseFactory o-down-> BlenderMeshRepository : constructs\n(the one exception —\nusecases/ otherwise never\nimports infrastructure/)
+UseCaseFactory ..> AddFirstVoxelUseCase : builds
+UseCaseFactory ..> AddVoxelOnFaceUseCase : builds
+UseCaseFactory ..> AddVoxelAtMouseUseCase : builds
+UseCaseFactory ..> AddCuboidUseCase : builds
+
+package "operators" {
+  class PolovoxelAddFirstVoxelOperator
+  class PolovoxelAddVoxelOperator
+  class PolovoxelAddOnClickVoxelOperator
+  class PolovoxelAddCuboidVoxelOperator
 }
 
-package "infrastructure/" as Infra {
-  [blender_mesh.py]
-}
+PolovoxelAddFirstVoxelOperator ..> UseCaseFactory : factory
+PolovoxelAddVoxelOperator ..> UseCaseFactory : factory
+PolovoxelAddOnClickVoxelOperator ..> UseCaseFactory : factory
+PolovoxelAddCuboidVoxelOperator ..> UseCaseFactory : factory
 
-package "domain/" as Domain {
-  [geometry.py]
-}
-
-note bottom of Domain
-  Pure Python, no bpy/bmesh imports.
-  Everything else depends inward on it.
+note bottom of MeshRepository
+  Pure Python (abc), zero bpy imports.
+  usecases/ depends on this abstraction,
+  never on BlenderMeshRepository directly.
 end note
 
-Root ..> Operators : registers
-Root ..> UI : registers
-Root ..> Keymaps : registers
-
-UI --> Operators : invokes (bl_idname)\nor calls directly (click-to-add toggle)
-Keymaps --> Operators : binds shortcut to
-
-Operators --> Infra : calls
-Operators --> Domain : calls
-
-Infra --> Domain : calls
-
-note bottom of Infra
-  Also raycasts the 3D viewport
-  (bpy_extras.view3d_utils + Scene.ray_cast)
-  for click-to-add — not just bmesh.
+note bottom of UseCaseFactory
+  Separates construction (wiring the
+  concrete BlenderMeshRepository into a
+  use case) from use (an operator calling
+  .execute(...) on the built instance).
 end note
 
 @enduml
@@ -71,9 +123,14 @@ end note
 ## Sequence: "Add voxel above selected face"
 
 The most illustrative flow: the panel button triggers an operator, which
-asks infrastructure for the selected face, hands the raw numbers to domain
-for the pure location math, then asks infrastructure again to actually
-create the cube and material in Blender.
+builds the matching use case from `usecases/factory.py` and calls
+`.execute(...)` on it. The use case asks its injected `MeshRepository`
+(concretely a `BlenderMeshRepository`, but the use case only knows the
+abstract port) for the selected face, hands the raw numbers to domain for
+the pure location math, then asks the repository again to actually create
+the cube and material in Blender — the operator itself never talks to
+`domain/` or `infrastructure/`, and the use case itself never imports
+`infrastructure/` either.
 
 ```plantuml
 @startuml sequence_add_voxel
@@ -82,26 +139,36 @@ title "Add voxel above selected face" — happy path
 actor User
 participant "Panel\n(ui/panel.py)" as Panel
 participant "PolovoxelAddVoxelOperator\n(operators/add_voxel_on_face.py)" as Operator
-participant "blender_mesh\n(infrastructure/)" as Infra
+participant "factory\n(usecases/factory.py)" as Factory
+participant "AddVoxelOnFaceUseCase\n(usecases/)" as UseCase
+participant "BlenderMeshRepository\n(infrastructure/, implements\ndomain.MeshRepository)" as Repo
 participant "geometry\n(domain/)" as Domain
 
 User -> Panel : click "Add voxel above selected face"
 Panel -> Operator : execute(context)
 
-Operator -> Infra : add_voxel_on_selected_face(context, scale, color)
-Infra -> Infra : get_first_selected_face_center_location(context)
+Operator -> Factory : build_add_voxel_on_face()
+note right : factory is the only place that\nimports infrastructure/ directly,\nto construct the concrete repo
+Factory --> Operator : AddVoxelOnFaceUseCase(mesh_repo)
+
+Operator -> UseCase : execute(context, scale, color)
+note right : UseCase only knows mesh_repo\nas the abstract MeshRepository port
+
+UseCase -> Repo : get_first_selected_face_center_location(context)
 note right : reads selected face\nvia bmesh
+Repo --> UseCase : center, normal
 
-Infra -> Domain : compute_face_voxel_location(center, normal, scale)
-Domain --> Infra : new cube location
+UseCase -> Domain : compute_face_voxel_location(center, normal, scale)
+Domain --> UseCase : new cube location
 
-Infra -> Domain : get_material_name(color)
-Domain --> Infra : material name
+UseCase -> Domain : get_material_name(color)
+Domain --> UseCase : material name
 
-Infra -> Infra : create_cube(...)
+UseCase -> Repo : create_cube(...)
 note right : bpy.ops.mesh.primitive_cube_add\n+ assign/create material
+Repo --> UseCase : done
 
-Infra --> Operator : done
+UseCase --> Operator : True
 Operator --> Panel : {'FINISHED'}
 @enduml
 ```
@@ -113,7 +180,10 @@ diagram: enabling the checkbox has to *start* a modal operator (deferred via
 `bpy.app.timers`, since starting one directly from a property `update`
 callback runs in a restricted context), and each click then raycasts the
 viewport directly — no edit-mesh face selection involved, unlike every other
-operator.
+operator. As with the flow above, the operator only ever talks to the use
+case built from `usecases/factory.py`, and the use case only ever talks to
+its injected `MeshRepository` port — neither imports `infrastructure/` or
+`domain/` beyond that.
 
 ```plantuml
 @startuml sequence_click_to_add
@@ -122,7 +192,9 @@ title "Click-to-add" — enable, then place a voxel
 actor User
 participant "properties.py\n(ui/)" as Props
 participant "add_voxel_on_click\n(operators/)" as Operator
-participant "blender_mesh\n(infrastructure/)" as Infra
+participant "factory\n(usecases/factory.py)" as Factory
+participant "AddVoxelAtMouseUseCase\n(usecases/)" as UseCase
+participant "BlenderMeshRepository\n(infrastructure/, implements\ndomain.MeshRepository)" as Repo
 participant "geometry\n(domain/)" as Domain
 
 == Enabling ==
@@ -134,19 +206,27 @@ Operator --> User : report "click-to-add is on"
 
 == Each click ==
 User -> Operator : LEFTMOUSE / PRESS (modal())
-Operator -> Infra : add_voxel_at_mouse(context, event, scale, color)
+Operator -> Factory : build_add_voxel_at_mouse()
+note right : factory is the only place that\nimports infrastructure/ directly,\nto construct the concrete repo
+Factory --> Operator : AddVoxelAtMouseUseCase(mesh_repo)
 
-Infra -> Infra : _find_view3d_region_under_mouse(context, event)
+Operator -> UseCase : execute(context, event, scale, color)
+note right : UseCase only knows mesh_repo\nas the abstract MeshRepository port
+
+UseCase -> Repo : get_face_under_mouse(context, event)
+Repo -> Repo : _find_view3d_region_under_mouse(context, event)
 note right : context.area/region are None here\n(started via a timer) — resolved by\nscanning window.screen.areas against\nevent.mouse_x/mouse_y instead
-
-Infra -> Infra : Scene.ray_cast(...)
+Repo -> Repo : Scene.ray_cast(...)
 note right : hit face's polygon.center,\nnot the raw ray-hit point —\nkeeps voxels grid-flush
+Repo --> UseCase : face center, normal
 
-Infra -> Domain : compute_face_voxel_location(center, normal, scale)
-Domain --> Infra : new cube location
+UseCase -> Domain : compute_face_voxel_location(center, normal, scale)
+Domain --> UseCase : new cube location
 
-Infra -> Infra : create_cube(...)
-Infra --> Operator : True (voxel created)
+UseCase -> Repo : create_cube(...)
+Repo --> UseCase : done
+
+UseCase --> Operator : True (voxel created)
 Operator --> User : consumes the click (RUNNING_MODAL)
 @enduml
 ```
