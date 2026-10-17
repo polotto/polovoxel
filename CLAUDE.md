@@ -22,6 +22,7 @@ Don't duplicate content across docs — extend the right one instead:
 - [`docs/CLI.md`](docs/CLI.md) — `scripts/publish.py` packaging reference
 - [`PLAN.md`](PLAN.md) — resumable checklist of what's done; re-read it
   before starting work in a new session so you know current state
+- `docs/diagrams/camadas.d2` and `.svg`: layer diagram generated from the real imports by `tools arch-check . --d2 docs/diagrams/camadas.d2`. Never edit by hand; the `.puml` files under `docs/` are the hand-drawn design.
 
 ## Architecture rule
 

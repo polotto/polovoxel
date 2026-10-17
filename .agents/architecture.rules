@@ -1,15 +1,21 @@
 # Regra de camadas, conferida por `tools arch-check` (passo `arch:` do verify.steps).
-# Do CLAUDE.md: domain é matemática pura, sem bpy/bmesh (mathutils pode: só
-# aritmética de vetor, roda fora do Blender); só infrastructure toca
-# bpy.ops/bpy.data/bmesh; ui é só apresentação.
-layer composition: polovoxel/usecases/factory.py polovoxel/__init__.py polovoxel/keymaps.py
+# Fonte: docs/ARCHITECTURE.md ("The rule in one sentence"). mathutils fica
+# liberado no domain: a regra do repo proíbe só bpy e bmesh lá.
+layer composition: polovoxel/__init__.py polovoxel/usecases/factory.py
+layer port: polovoxel/domain/mesh_repository.py
 layer domain: polovoxel/domain/**
 layer usecases: polovoxel/usecases/**
 layer infra: polovoxel/infrastructure/**
-layer operators: polovoxel/operators/**
+layer operators: polovoxel/operators/** polovoxel/keymaps.py
 layer ui: polovoxel/ui/**
 
-deny domain -> * pkg:bpy* pkg:bmesh*
+# domain não sabe nada do Blender
+deny domain -> usecases infra operators ui composition pkg:bpy* pkg:bmesh*
+deny port -> usecases infra operators ui composition pkg:bpy* pkg:bmesh*
+# usecases orquestra domain contra o port, nunca a infra concreta
 deny usecases -> infra operators ui pkg:bpy* pkg:bmesh*
-deny infra -> operators ui
-deny ui -> infra pkg:bmesh*
+# infra só toca a malha, não conhece quem chama
+deny infra -> usecases operators ui composition
+# operators, ui e keymaps passam pelos usecases: nunca infra nem o port
+deny operators -> infra port pkg:bmesh*
+deny ui -> infra port pkg:bmesh*
