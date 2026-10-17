@@ -115,6 +115,15 @@ layering shape as the bug Phase 5 fixed, one level down.
       considered fully verified — not run in this session, no sandboxed
       Blender available
 
+## Phase 7 — Layer rule checked on every change
+
+- [x] 7.1 `.agents/architecture.rules` encodes the dependency rule from
+      `docs/ARCHITECTURE.md`; `tools arch-check .` runs it (0 violations)
+- [x] 7.2 `.agents/verify.steps` (compile, arch, diagram) so `verify`
+      checks it after every change
+- [x] 7.3 `docs/diagrams/camadas.d2` and `.svg` generated from the real
+      imports; the `diagram` step fails when they go stale
+
 ## Notes
 
 - Executed via background sub-agents (Workflow tool) to keep the main chat

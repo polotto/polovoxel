@@ -2,27 +2,29 @@
 direction: right
 vars: { d2-config: { layout-engine: elk } }
 
-composition: "composition  (polovoxel)" {
+root: "root  (polovoxel)" {
   style: { fill: "#e8effc"; stroke: "#2357c6"; border-radius: 8 }
   "polovoxel/__init__.py": "__init__.py"
-  "usecases": "usecases/" { style: { fill: "#ffffff"; stroke: "#2357c6"; stroke-dash: 2 }
-    "polovoxel/usecases/factory.py": "factory.py"
-  }
+}
+
+composition: "composition  (polovoxel/usecases)" {
+  style: { fill: "#e3f4ec"; stroke: "#1d7a55"; border-radius: 8 }
+  "polovoxel/usecases/factory.py": "factory.py"
 }
 
 port: "port  (polovoxel/domain)" {
-  style: { fill: "#e3f4ec"; stroke: "#1d7a55"; border-radius: 8 }
+  style: { fill: "#fdf1e4"; stroke: "#b4610e"; border-radius: 8 }
   "polovoxel/domain/mesh_repository.py": "mesh_repository.py"
 }
 
 domain: "domain  (polovoxel/domain)" {
-  style: { fill: "#fdf1e4"; stroke: "#b4610e"; border-radius: 8 }
+  style: { fill: "#f1eafb"; stroke: "#7140b8"; border-radius: 8 }
   "polovoxel/domain/__init__.py": "__init__.py"
   "polovoxel/domain/geometry.py": "geometry.py"
 }
 
 usecases: "usecases  (polovoxel/usecases)" {
-  style: { fill: "#f1eafb"; stroke: "#7140b8"; border-radius: 8 }
+  style: { fill: "#e6f5f7"; stroke: "#13758a"; border-radius: 8 }
   "polovoxel/usecases/__init__.py": "__init__.py"
   "polovoxel/usecases/add_cuboid.py": "add_cuboid.py"
   "polovoxel/usecases/add_first_voxel.py": "add_first_voxel.py"
@@ -31,15 +33,15 @@ usecases: "usecases  (polovoxel/usecases)" {
 }
 
 infra: "infra  (polovoxel/infrastructure)" {
-  style: { fill: "#e6f5f7"; stroke: "#13758a"; border-radius: 8 }
+  style: { fill: "#f7efe0"; stroke: "#8a6413"; border-radius: 8 }
   "polovoxel/infrastructure/__init__.py": "__init__.py"
   "polovoxel/infrastructure/blender_mesh.py": "blender_mesh.py"
 }
 
 operators: "operators  (polovoxel)" {
-  style: { fill: "#f7efe0"; stroke: "#8a6413"; border-radius: 8 }
+  style: { fill: "#eef0f2"; stroke: "#4a5563"; border-radius: 8 }
   "polovoxel/keymaps.py": "keymaps.py"
-  "operators": "operators/" { style: { fill: "#ffffff"; stroke: "#8a6413"; stroke-dash: 2 }
+  "operators": "operators/" { style: { fill: "#ffffff"; stroke: "#4a5563"; stroke-dash: 2 }
     "polovoxel/operators/__init__.py": "__init__.py"
     "polovoxel/operators/add_cuboid.py": "add_cuboid.py"
     "polovoxel/operators/add_first_voxel.py": "add_first_voxel.py"
@@ -49,23 +51,24 @@ operators: "operators  (polovoxel)" {
 }
 
 ui: "ui  (polovoxel/ui)" {
-  style: { fill: "#eef0f2"; stroke: "#4a5563"; border-radius: 8 }
+  style: { fill: "#e8effc"; stroke: "#2357c6"; border-radius: 8 }
   "polovoxel/ui/__init__.py": "__init__.py"
   "polovoxel/ui/panel.py": "panel.py"
   "polovoxel/ui/properties.py": "properties.py"
 }
 
-composition."polovoxel/__init__.py" -> operators."operators"."polovoxel/operators/add_cuboid.py"
-composition."polovoxel/__init__.py" -> operators."operators"."polovoxel/operators/add_first_voxel.py"
-composition."polovoxel/__init__.py" -> operators."operators"."polovoxel/operators/add_voxel_on_click.py"
-composition."polovoxel/__init__.py" -> operators."operators"."polovoxel/operators/add_voxel_on_face.py"
-composition."polovoxel/__init__.py" -> ui."polovoxel/ui/panel.py"
-composition."polovoxel/__init__.py" -> ui."polovoxel/ui/properties.py"
+root."polovoxel/__init__.py" -> operators."polovoxel/keymaps.py"
+root."polovoxel/__init__.py" -> operators."operators"."polovoxel/operators/add_cuboid.py"
+root."polovoxel/__init__.py" -> operators."operators"."polovoxel/operators/add_first_voxel.py"
+root."polovoxel/__init__.py" -> operators."operators"."polovoxel/operators/add_voxel_on_click.py"
+root."polovoxel/__init__.py" -> operators."operators"."polovoxel/operators/add_voxel_on_face.py"
+root."polovoxel/__init__.py" -> ui."polovoxel/ui/panel.py"
+root."polovoxel/__init__.py" -> ui."polovoxel/ui/properties.py"
 infra."polovoxel/infrastructure/blender_mesh.py" -> port."polovoxel/domain/mesh_repository.py"
-operators."operators"."polovoxel/operators/add_cuboid.py" -> composition."usecases"."polovoxel/usecases/factory.py"
-operators."operators"."polovoxel/operators/add_first_voxel.py" -> composition."usecases"."polovoxel/usecases/factory.py"
-operators."operators"."polovoxel/operators/add_voxel_on_click.py" -> composition."usecases"."polovoxel/usecases/factory.py"
-operators."operators"."polovoxel/operators/add_voxel_on_face.py" -> composition."usecases"."polovoxel/usecases/factory.py"
+operators."operators"."polovoxel/operators/add_cuboid.py" -> composition."polovoxel/usecases/factory.py"
+operators."operators"."polovoxel/operators/add_first_voxel.py" -> composition."polovoxel/usecases/factory.py"
+operators."operators"."polovoxel/operators/add_voxel_on_click.py" -> composition."polovoxel/usecases/factory.py"
+operators."operators"."polovoxel/operators/add_voxel_on_face.py" -> composition."polovoxel/usecases/factory.py"
 ui."polovoxel/ui/panel.py" -> operators."operators"."polovoxel/operators/add_cuboid.py"
 ui."polovoxel/ui/panel.py" -> operators."operators"."polovoxel/operators/add_first_voxel.py"
 ui."polovoxel/ui/panel.py" -> operators."operators"."polovoxel/operators/add_voxel_on_face.py"
@@ -78,8 +81,8 @@ usecases."polovoxel/usecases/add_voxel_on_click.py" -> domain."polovoxel/domain/
 usecases."polovoxel/usecases/add_voxel_on_click.py" -> port."polovoxel/domain/mesh_repository.py"
 usecases."polovoxel/usecases/add_voxel_on_face.py" -> domain."polovoxel/domain/geometry.py"
 usecases."polovoxel/usecases/add_voxel_on_face.py" -> port."polovoxel/domain/mesh_repository.py"
-composition."usecases"."polovoxel/usecases/factory.py" -> infra."polovoxel/infrastructure/blender_mesh.py"
-composition."usecases"."polovoxel/usecases/factory.py" -> usecases."polovoxel/usecases/add_cuboid.py"
-composition."usecases"."polovoxel/usecases/factory.py" -> usecases."polovoxel/usecases/add_first_voxel.py"
-composition."usecases"."polovoxel/usecases/factory.py" -> usecases."polovoxel/usecases/add_voxel_on_click.py"
-composition."usecases"."polovoxel/usecases/factory.py" -> usecases."polovoxel/usecases/add_voxel_on_face.py"
+composition."polovoxel/usecases/factory.py" -> infra."polovoxel/infrastructure/blender_mesh.py"
+composition."polovoxel/usecases/factory.py" -> usecases."polovoxel/usecases/add_cuboid.py"
+composition."polovoxel/usecases/factory.py" -> usecases."polovoxel/usecases/add_first_voxel.py"
+composition."polovoxel/usecases/factory.py" -> usecases."polovoxel/usecases/add_voxel_on_click.py"
+composition."polovoxel/usecases/factory.py" -> usecases."polovoxel/usecases/add_voxel_on_face.py"

@@ -38,8 +38,8 @@ proportional. Don't add config systems, plugin registries, or abstractions
 for hypothetical future needs. A bug fix doesn't need surrounding cleanup.
 
 The rule is checked by `tools arch-check .` against
-`.agents/architecture.rules` (`usecases/factory.py` is the composition root,
-the one place allowed to wire `infrastructure/`). After changing an import
+`.agents/architecture.rules` (`usecases/factory.py` is the one place allowed
+to wire `infrastructure/`; `__init__.py` registers the classes). After changing an import
 between layers, regenerate `docs/diagrams/camadas.d2` and `.svg` with
 `tools arch-check . --d2 docs/diagrams/camadas.d2`. `verify` runs compile,
 arch and the diagram check (`.agents/verify.steps`).
