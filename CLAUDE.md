@@ -36,6 +36,13 @@ This is a hobby-scale add-on, not an enterprise app — keep additions
 proportional. Don't add config systems, plugin registries, or abstractions
 for hypothetical future needs. A bug fix doesn't need surrounding cleanup.
 
+The rule is checked by `tools arch-check .` against
+`.agents/architecture.rules` (`usecases/factory.py` is the composition root,
+the one place allowed to wire `infrastructure/`). After changing an import
+between layers, regenerate `docs/diagrams/camadas.d2` and `.svg` with
+`tools arch-check . --d2 docs/diagrams/camadas.d2`. `verify` runs compile,
+arch and the diagram check (`.agents/verify.steps`).
+
 ## Verification — do this after every code change
 
 Blender's Python modules (`bpy`, `bmesh`, `mathutils`) aren't importable

@@ -1,0 +1,15 @@
+# Regra de camadas, conferida por `tools arch-check` (passo `arch:` do verify.steps).
+# Do CLAUDE.md: domain é matemática pura, sem bpy/bmesh (mathutils pode: só
+# aritmética de vetor, roda fora do Blender); só infrastructure toca
+# bpy.ops/bpy.data/bmesh; ui é só apresentação.
+layer composition: polovoxel/usecases/factory.py polovoxel/__init__.py polovoxel/keymaps.py
+layer domain: polovoxel/domain/**
+layer usecases: polovoxel/usecases/**
+layer infra: polovoxel/infrastructure/**
+layer operators: polovoxel/operators/**
+layer ui: polovoxel/ui/**
+
+deny domain -> * pkg:bpy* pkg:bmesh*
+deny usecases -> infra operators ui pkg:bpy* pkg:bmesh*
+deny infra -> operators ui
+deny ui -> infra pkg:bmesh*
