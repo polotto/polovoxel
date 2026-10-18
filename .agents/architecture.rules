@@ -18,9 +18,10 @@ deny usecases -> infra operators ui composition root pkg:bpy* pkg:bmesh*
 # infra depende do domain só pelo port (MeshRepository), nunca da matemática
 deny infra -> domain usecases operators ui composition root
 # operators e keymaps chegam ao use case pela factory: nada de domain, infra ou port
-deny operators -> domain infra port ui root pkg:bmesh*
+deny operators -> domain usecases infra port ui root pkg:bmesh*
 # ui pode usar domain de passagem (ARCHITECTURE: "only incidentally")
-deny ui -> infra port root pkg:bmesh*
+# a tela chega ao use case pelos operators, nunca direto
+deny ui -> usecases composition infra port root pkg:bmesh*
 # só a factory importa infra; a raiz registra classes
 deny root -> infra port
 deny composition -> operators ui root

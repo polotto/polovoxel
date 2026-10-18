@@ -1,6 +1,6 @@
 # Conferência do agente (`verify`). O add-on só roda dentro do Blender; aqui
 # entra o que dá para checar fora dele.
-only: polovoxel/** .agents/architecture.rules docs/diagrams/**
-compile: python3 -m compileall -q polovoxel
+only: polovoxel/** scripts/** .agents/architecture.rules .agents/verify.steps docs/diagrams/**
+compile: python3 -m compileall -q polovoxel scripts
 arch: tools arch-check .
 diagram: tools arch-check . --d2-check docs/diagrams/camadas.d2
