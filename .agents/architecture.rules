@@ -23,5 +23,5 @@ deny operators -> domain usecases infra port ui root pkg:bmesh*
 # a tela chega ao use case pelos operators, nunca direto
 deny ui -> usecases composition infra port root pkg:bmesh*
 # só a factory importa infra; a raiz registra classes
-deny root -> infra port
-deny composition -> operators ui root
+deny root -> infra port pkg:bmesh*
+deny composition -> operators ui root pkg:bmesh*
