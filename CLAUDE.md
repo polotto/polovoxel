@@ -22,6 +22,7 @@ Don't duplicate content across docs — extend the right one instead:
 - [`docs/CLI.md`](docs/CLI.md) — `scripts/publish.py` packaging reference
 - [`PLAN.md`](PLAN.md) — resumable checklist of what's done; re-read it
   before starting work in a new session so you know current state
+- `docs/diagrams/camadas.d2` and `.svg`: layer diagram generated from the real imports by `tools arch-check . --d2 docs/diagrams/camadas.d2`. Never edit by hand; the `.puml` files under `docs/` are the hand-drawn design.
 
 ## Architecture rule
 
@@ -35,6 +36,13 @@ Blender. Everything else depends inward on `domain`, never the reverse.
 This is a hobby-scale add-on, not an enterprise app — keep additions
 proportional. Don't add config systems, plugin registries, or abstractions
 for hypothetical future needs. A bug fix doesn't need surrounding cleanup.
+
+The rule is checked by `tools arch-check .` against
+`.agents/architecture.rules` (`usecases/factory.py` is the one place allowed
+to wire `infrastructure/`; `__init__.py` registers the classes). After changing an import
+between layers, regenerate `docs/diagrams/camadas.d2` and `.svg` with
+`tools arch-check . --d2 docs/diagrams/camadas.d2`. `verify` runs compile,
+arch and the diagram check (`.agents/verify.steps`).
 
 ## Verification — do this after every code change
 

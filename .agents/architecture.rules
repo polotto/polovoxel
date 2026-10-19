@@ -1,0 +1,27 @@
+# Regra de camadas, conferida por `tools arch-check` (passo `arch:` do verify.steps).
+# Fonte: docs/ARCHITECTURE.md ("The rule in one sentence"). mathutils fica
+# liberado no domain: a regra do repo proíbe só bpy e bmesh lá.
+layer root: polovoxel/__init__.py
+layer composition: polovoxel/usecases/factory.py
+layer port: polovoxel/domain/mesh_repository.py
+layer domain: polovoxel/domain/**
+layer usecases: polovoxel/usecases/**
+layer infra: polovoxel/infrastructure/**
+layer operators: polovoxel/operators/** polovoxel/keymaps.py
+layer ui: polovoxel/ui/**
+
+# domain não sabe nada do Blender
+deny domain -> usecases infra operators ui composition root pkg:bpy* pkg:bmesh*
+deny port -> usecases infra operators ui composition root pkg:bpy* pkg:bmesh*
+# o módulo do use case só importa domain e o port, nunca infra (nem pela factory)
+deny usecases -> infra operators ui composition root pkg:bpy* pkg:bmesh*
+# infra depende do domain só pelo port (MeshRepository), nunca da matemática
+deny infra -> domain usecases operators ui composition root
+# operators e keymaps chegam ao use case pela factory: nada de domain, infra ou port
+deny operators -> domain usecases infra port ui root pkg:bmesh*
+# ui pode usar domain de passagem (ARCHITECTURE: "only incidentally")
+# a tela chega ao use case pelos operators, nunca direto
+deny ui -> usecases composition infra port root pkg:bmesh*
+# só a factory importa infra; a raiz registra classes
+deny root -> infra port pkg:bmesh*
+deny composition -> operators ui root pkg:bmesh*
